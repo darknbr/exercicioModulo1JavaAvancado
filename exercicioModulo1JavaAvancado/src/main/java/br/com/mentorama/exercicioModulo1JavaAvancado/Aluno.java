@@ -4,10 +4,6 @@ public class Aluno {
     private Integer id, idade;
     private String nome;
 
-    public Aluno() {
-
-    }
-
     public Aluno(Integer id, Integer idade, String nome) {
         this.id = id;
         this.idade = idade;
@@ -38,12 +34,4 @@ public class Aluno {
         this.nome = nome;
     }
 
-    @Override
-    public String toString() {
-        return "Aluno{" +
-                "id=" + id +
-                ", idade=" + idade +
-                ", nome='" + nome + '\'' +
-                '}';
-    }
 }
