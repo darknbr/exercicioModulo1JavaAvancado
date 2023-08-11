@@ -1,14 +1,11 @@
 package br.com.mentorama.exercicioModulo1JavaAvancado;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-
+//Módulo I
 //--> A API deve possuir os seguintes endpoints
 //001-> Listar todos os alunos
 //001.1-> Podendo filtrar por nome(ultilizando contains)
@@ -18,78 +15,67 @@ import java.util.stream.Collectors;
 //004-> Atualizar aluno existente
 //005-> Remover registro de aluno
 
+//Modulo II --> refatoração
+// 006->Crie uma classe de service para conter toda a lógica de,
+// adição e busca dos alunos em uma lista que estava na controller
+//--> AlunoService.java -->
+
+// 007->Ultilize os métodos da classe service que você criou na claase controller
+// para manter o comportamento anterior --> OK
+
+// ######Exceptions#########
+// 008-> Criação de uma classe de exception customizada para representar um aluno não existente
+//-->AlunoNaoExistenteException.Java
+
+// 009-> Na classe service de alunos que você criou, na busca de aluno deve ser lançada
+// a exception que você criou quando o aluno não for encontrado tanto ao ser buscado
+// por nome quanto a ao ser buscado por ID
+//GetMapping --> aluno/id={id} ### aluno/nome={nome}
+
+// 010-> Faça um tratamento de exception na sua aplicação para retornar o status 404
+// com uma mensagem de aluno não encontrado sempre que essa exception for lançada
+// ##Feito na Classe -->> GenericContollerAdvice.java
 
 @RestController
 @RequestMapping("/aluno")
-public class AlunoController {
+public class AlunoController{
 
-    private final List<Aluno> alunos;
+    private final AlunoService alunoService; // Instância de AlunoService
 
-    public AlunoController() {
-        this.alunos = new ArrayList<>();
-        //adicionando alguns alunos para testes
-        alunos.add(new Aluno(1, 20, "João"));
-        alunos.add(new Aluno(2, 22, "Maria"));
-        alunos.add(new Aluno(3, 21, "Marcio"));
-        alunos.add(new Aluno(4, 22, "Marcio"));
-        alunos.add(new Aluno(5, 20, "João"));
-        alunos.add(new Aluno(6, 22, "Danillo"));
-        alunos.add(new Aluno(6, 20, "Daniel"));
-        alunos.add(new Aluno(7, 22, "Danillo"));
-        alunos.add(new Aluno(7, 25, "Aline"));
-        alunos.add(new Aluno(7, 22, "Elidiane"));
+    // Injeção de dependência do AlunoService no construtor
+    public AlunoController(AlunoService alunoService) {
+        this.alunoService = alunoService;
+    }
+
+    //get body para retorno o corpo como resposta assim que entendi a documentacao
+     @GetMapping(value = "/id={id}")
+     public Aluno procurarPorId(@PathVariable("id") Integer id) {
+        return alunoService.procurarPorId(id).getBody();
+    }
+
+    @GetMapping(value = "/nome={nome}")
+    public Aluno procurarPorNome(@PathVariable("nome") String nome) {
+        return alunoService.procurarPorNome(nome).getBody();
     }
 
     @GetMapping
     public List<Aluno> buscaNomeOuIdade(@RequestParam(required = false) String aluno) {
-        if (aluno != null) {
-            return alunos.stream()
-                    //001.1-> Podendo filtrar por nome(ultilizando contains)
-                    .filter(comp -> comp.getNome().contains(aluno) ||
-                            //001.2-> Podendo filtrar por idade
-                            String.valueOf(comp.getIdade()).contains(aluno))
-                    //001-> Listar todos os alunos caso tenha procurado por algum dos parametros acima
-                    .collect(Collectors.toList());
-        }
-        //001-> Listar todos os alunos caso nenhum parametro tenha sido enviado
-        return alunos;
-    }
-
-    @GetMapping(value = "/{id}") //o id deve ser exatamente igual ao definido em @PathVariable
-    //002-> Buscar aluno por id
-    public Aluno procurarPorId(@PathVariable("id") Integer id){
-        return this.alunos.stream()
-                .filter(comp -> comp.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return (List<Aluno>) alunoService.buscaNomeOuIdade(aluno);
     }
 
     @PostMapping
-    //003-> Cadastrar novo aluno
-    public ResponseEntity<Integer> novo(@RequestBody final Aluno aluno){
-        if(aluno.getId() == null){
-            aluno.setId(alunos.size() + 1);
-        }
-        alunos.add(aluno);
-        return new ResponseEntity<>(aluno.getId(), HttpStatus.CREATED);//aqui retonar o id e o status CREATED
+    public ResponseEntity<Integer> novo(@RequestBody final Aluno aluno) {
+        return alunoService.novo(aluno);
     }
 
     @PutMapping
-    //004-> Atualizar aluno existente
-    public ResponseEntity atualizar(@RequestBody final Aluno aluno){
-        alunos.stream()
-                .filter(comp -> comp.getId().equals(aluno.getId()))
-                .forEach(comp -> {
-                    comp.setIdade(aluno.getIdade());
-                    comp.setNome(aluno.getNome());
-                });
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity atualizar(@RequestBody final Aluno aluno) {
+        return alunoService.atualizar(aluno);
     }
 
     @DeleteMapping("/{id}")
-    //005-> Remover registro de aluno
-    public ResponseEntity delete(@PathVariable("id")Integer id){
-        alunos.removeIf(comp -> comp.getId().equals(id));
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity delete(@PathVariable("id") Integer id) {
+        return alunoService.delete(id);
     }
+
 }

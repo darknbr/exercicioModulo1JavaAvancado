@@ -8,6 +8,7 @@ public class ExercicioModulo1JavaAvancadoApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ExercicioModulo1JavaAvancadoApplication.class, args);
+
 	}
 
 }
